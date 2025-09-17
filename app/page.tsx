@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { Search, Filter, Phone, MessageCircle, Eye, Grid, List } from 'lucide-react'
+import { useState } from 'react'
+import { Search, MessageCircle, Eye } from 'lucide-react'
 import useSWR from 'swr'
 import Image from 'next/image'
 
@@ -20,82 +20,46 @@ interface Product {
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('Todos')
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
 
-  const { data: products = [], isLoading, error } = useSWR('/api/products', fetcher, {
-    refreshInterval: 300000,
-    revalidateOnFocus: false,
-  })
-
-  const categories = useMemo(() => {
-    const uniqueCategories: string[] = []
-    
-    products.forEach((product: Product) => {
-      if (!uniqueCategories.includes(product.categoria)) {
-        uniqueCategories.push(product.categoria)
-      }
-    })
-    
-    const allCategories = ['Todos'].concat(uniqueCategories)
-    
-    return allCategories.map(cat => ({
-      name: cat,
-      count: cat === 'Todos' ? products.length : products.filter((p: Product) => p.categoria === cat).length
-    }))
-  }, [products])
-
-  const filteredProducts = useMemo(() => {
-    return products.filter((product: Product) => {
-      const matchesSearch = product.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          product.tags.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          product.categoria.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesCategory = selectedCategory === 'Todos' || product.categoria === selectedCategory
-      return matchesSearch && matchesCategory && product.status === 'Ativo'
-    })
-  }, [products, searchTerm, selectedCategory])
+  const { data: products = [], isLoading } = useSWR('/api/products', fetcher)
 
   const handleWhatsApp = (product: Product) => {
-    const message = `🏢 *B3 Ambientes Corporativos*\n\n📋 *${product.nome}*\n📂 Categoria: ${product.categoria}\n📝 ${product.descricao}\n\n🔗 Ver catálogo: ${window.location.origin}\n\n💼 Gostaria de solicitar orçamento personalizado!`
+    const message = `🏢 B3 Ambientes Corporativos\n\n📋 ${product.nome}\n📂 ${product.categoria}\n📝 ${product.descricao}\n\n💼 Solicitar orçamento!`
     const phoneNumber = '5581999999999'
     const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
     window.open(url, '_blank')
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Erro ao carregar produtos</h2>
-          <p className="text-gray-600">Tente recarregar a página</p>
-        </div>
-      </div>
-    )
-  }
+  // Filtrar produtos
+  const filteredProducts = products.filter((product: Product) => {
+    if (!product.nome || !product.categoria) return false
+    
+    const searchMatch = searchTerm === '' || 
+      product.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.categoria.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    const categoryMatch = selectedCategory === 'Todos' || product.categoria === selectedCategory
+    
+    return searchMatch && categoryMatch && product.status === 'Ativo'
+  })
 
-  const loadingCards = []
-  for (let i = 0; i < 8; i++) {
-    loadingCards.push(
-      <div key={i} className="bg-white rounded-2xl p-6 shadow-sm animate-pulse">
-        <div className="bg-gray-300 h-48 rounded-xl mb-4"></div>
-        <div className="bg-gray-300 h-4 rounded mb-2"></div>
-        <div className="bg-gray-300 h-3 rounded w-2/3"></div>
-      </div>
-    )
-  }
+  // Categorias simples
+  const allCategories = ['Todos', 'Cadeiras', 'Mesas', 'Estações', 'Armários', 'Acessórios']
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <header className="sticky top-0 z-50 glass-effect border-b border-white/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">B3</span>
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">B3 MÓVEIS</h1>
-                <p className="text-xs text-gray-600">Ambientes Corporativos</p>
+                <p className="text-sm text-gray-600">Ambientes Corporativos</p>
               </div>
             </div>
 
@@ -104,8 +68,8 @@ export default function Home() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Buscar móveis: cadeira executive, mesa reunião..."
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                  placeholder="Buscar móveis..."
+                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -113,110 +77,81 @@ export default function Home() {
             </div>
 
             <button
-              onClick={() => handleWhatsApp({ nome: 'Catálogo Geral', categoria: 'Geral', descricao: 'Interesse no catálogo completo', tags: '', imagem_url: '', status: 'Ativo', id: 0 })}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl"
+              onClick={() => handleWhatsApp({ nome: 'Catálogo Geral', categoria: 'Geral', descricao: 'Catálogo completo', tags: '', imagem_url: '', status: 'Ativo', id: 0 })}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium flex items-center space-x-2"
             >
               <MessageCircle className="h-5 w-5" />
-              <span>Contato Vendedor</span>
+              <span>Contato</span>
             </button>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-          <div className="flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <button
-                key={category.name}
-                onClick={() => setSelectedCategory(category.name)}
-                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                  selectedCategory === category.name
-                    ? 'bg-blue-600 text-white shadow-lg'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-                }`}
-              >
-                {category.name} ({category.count})
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <span className="text-sm text-gray-600">
-              {filteredProducts.length} produto{filteredProducts.length !== 1 ? 's' : ''}
-            </span>
-            <div className="flex rounded-lg border border-gray-200 bg-white">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-l-lg transition-colors ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
-              >
-                <Grid className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded-r-lg transition-colors ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
-              >
-                <List className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
+      {/* Filtros */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="flex flex-wrap gap-2 mb-8">
+          {allCategories.map((category) => (
+            <button
+              key={category}
+              onClick={() => setSelectedCategory(category)}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                selectedCategory === category
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              {category}
+            </button>
+          ))}
         </div>
 
+        {/* Produtos */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {loadingCards}
+            {[1,2,3,4,5,6,7,8].map((i) => (
+              <div key={i} className="bg-white rounded-lg p-6 shadow animate-pulse">
+                <div className="bg-gray-300 h-48 rounded mb-4"></div>
+                <div className="bg-gray-300 h-4 rounded mb-2"></div>
+                <div className="bg-gray-300 h-3 rounded w-2/3"></div>
+              </div>
+            ))}
           </div>
         ) : (
-          <div className={`grid gap-6 ${
-            viewMode === 'grid' 
-              ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-              : 'grid-cols-1 lg:grid-cols-2'
-          }`}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map((product: Product) => (
-              <div
-                key={product.id}
-                className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 card-hover group"
-              >
+              <div key={product.id} className="bg-white rounded-lg overflow-hidden shadow hover:shadow-lg transition-shadow group">
                 <div className="relative">
                   <Image
                     src={product.imagem_url}
                     alt={product.nome}
                     width={400}
                     height={300}
-                    className={`w-full object-cover ${viewMode === 'grid' ? 'h-48' : 'h-64'}`}
-                    loading="lazy"
+                    className="w-full h-48 object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div className="absolute bottom-4 left-4 right-4 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <button
-                      onClick={() => handleWhatsApp(product)}
-                      className="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center space-x-2"
-                    >
-                      <MessageCircle className="h-4 w-4" />
-                      <span>WhatsApp</span>
-                    </button>
-                    <button
-                      onClick={() => setSelectedProduct(product)}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center space-x-2"
-                    >
-                      <Eye className="h-4 w-4" />
-                      <span>Ver</span>
-                    </button>
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleWhatsApp(product)}
+                        className="bg-green-500 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        <span>WhatsApp</span>
+                      </button>
+                      <button
+                        onClick={() => setSelectedProduct(product)}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span>Ver</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                      {product.nome}
-                    </h3>
-                  </div>
-                  <p className="text-sm font-medium text-blue-600 uppercase tracking-wide mb-2">
-                    {product.categoria}
-                  </p>
-                  <p className="text-gray-600 text-sm">
-                    {product.descricao}
-                  </p>
+                <div className="p-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">{product.nome}</h3>
+                  <p className="text-sm font-medium text-blue-600 uppercase mb-2">{product.categoria}</p>
+                  <p className="text-gray-600 text-sm">{product.descricao}</p>
                 </div>
               </div>
             ))}
@@ -225,22 +160,18 @@ export default function Home() {
 
         {filteredProducts.length === 0 && !isLoading && (
           <div className="text-center py-16">
-            <div className="max-w-md mx-auto">
-              <Filter className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-medium text-gray-900 mb-2">Nenhum produto encontrado</h3>
-              <p className="text-gray-600">
-                Tente ajustar sua busca ou filtros para encontrar o que procura.
-              </p>
-            </div>
+            <h3 className="text-xl font-medium text-gray-900 mb-2">Nenhum produto encontrado</h3>
+            <p className="text-gray-600">Tente ajustar sua busca.</p>
           </div>
         )}
       </div>
 
+      {/* Modal */}
       {selectedProduct && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex min-h-screen items-center justify-center p-4">
-            <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={() => setSelectedProduct(null)} />
-            <div className="relative bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
+            <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setSelectedProduct(null)} />
+            <div className="relative bg-white rounded-lg max-w-4xl w-full max-h-90vh overflow-hidden">
               <div className="flex flex-col lg:flex-row">
                 <div className="lg:w-2/3">
                   <Image
@@ -251,40 +182,32 @@ export default function Home() {
                     className="w-full h-64 lg:h-full object-cover"
                   />
                 </div>
-                <div className="lg:w-1/3 p-8">
-                  <div className="flex justify-between items-start mb-6">
+                <div className="lg:w-1/3 p-6">
+                  <div className="flex justify-between items-start mb-4">
                     <div>
                       <h2 className="text-2xl font-bold text-gray-900 mb-2">{selectedProduct.nome}</h2>
-                      <p className="text-blue-600 font-medium uppercase tracking-wide">{selectedProduct.categoria}</p>
+                      <p className="text-blue-600 font-medium uppercase">{selectedProduct.categoria}</p>
                     </div>
                     <button
                       onClick={() => setSelectedProduct(null)}
-                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                      className="text-gray-400 hover:text-gray-600"
                     >
-                      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
+                      ✕
                     </button>
                   </div>
 
-                  <div className="mb-8">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Descrição</h3>
-                    <p className="text-gray-600 leading-relaxed">{selectedProduct.descricao}</p>
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Descrição</h3>
+                    <p className="text-gray-600">{selectedProduct.descricao}</p>
                   </div>
 
-                  <div className="space-y-3">
-                    <button
-                      onClick={() => handleWhatsApp(selectedProduct)}
-                      className="w-full bg-green-500 hover:bg-green-600 text-white px-6 py-4 rounded-xl font-medium transition-colors duration-200 flex items-center justify-center space-x-3"
-                    >
-                      <MessageCircle className="h-5 w-5" />
-                      <span>Solicitar Orçamento via WhatsApp</span>
-                    </button>
-                    <button className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-xl font-medium transition-colors duration-200 flex items-center justify-center space-x-3">
-                      <Phone className="h-5 w-5" />
-                      <span>Falar com Consultor</span>
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => handleWhatsApp(selectedProduct)}
+                    className="w-full bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center space-x-2"
+                  >
+                    <MessageCircle className="h-5 w-5" />
+                    <span>Solicitar Orçamento</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -292,9 +215,10 @@ export default function Home() {
         </div>
       )}
 
+      {/* WhatsApp Flutuante */}
       <button
-        onClick={() => handleWhatsApp({ nome: 'Atendimento Geral', categoria: 'Atendimento', descricao: 'Preciso de ajuda com móveis corporativos', tags: '', imagem_url: '', status: 'Ativo', id: 0 })}
-        className="fixed bottom-6 right-6 bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 z-40 animate-bounce"
+        onClick={() => handleWhatsApp({ nome: 'Atendimento', categoria: 'Geral', descricao: 'Preciso de ajuda', tags: '', imagem_url: '', status: 'Ativo', id: 0 })}
+        className="fixed bottom-6 right-6 bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-lg"
       >
         <MessageCircle className="h-6 w-6" />
       </button>
