@@ -29,14 +29,15 @@ export default function Home() {
   })
 
   const categories = useMemo(() => {
-    const uniqueCategories = products.reduce((acc: string[], product: Product) => {
-      if (!acc.includes(product.categoria)) {
-        acc.push(product.categoria)
-      }
-      return acc
-    }, [])
+    const uniqueCategories: string[] = []
     
-    const allCategories = ['Todos', ...uniqueCategories]
+    products.forEach((product: Product) => {
+      if (!uniqueCategories.includes(product.categoria)) {
+        uniqueCategories.push(product.categoria)
+      }
+    })
+    
+    const allCategories = ['Todos'].concat(uniqueCategories)
     
     return allCategories.map(cat => ({
       name: cat,
@@ -72,13 +73,24 @@ export default function Home() {
     )
   }
 
+  const loadingCards = []
+  for (let i = 0; i < 8; i++) {
+    loadingCards.push(
+      <div key={i} className="bg-white rounded-2xl p-6 shadow-sm animate-pulse">
+        <div className="bg-gray-300 h-48 rounded-xl mb-4"></div>
+        <div className="bg-gray-300 h-4 rounded mb-2"></div>
+        <div className="bg-gray-300 h-3 rounded w-2/3"></div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <header className="sticky top-0 z-50 glass-effect border-b border-white/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-b3-blue-500 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">B3</span>
               </div>
               <div>
@@ -93,7 +105,7 @@ export default function Home() {
                 <input
                   type="text"
                   placeholder="Buscar móveis: cadeira executive, mesa reunião..."
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-b3-blue-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -102,7 +114,7 @@ export default function Home() {
 
             <button
               onClick={() => handleWhatsApp({ nome: 'Catálogo Geral', categoria: 'Geral', descricao: 'Interesse no catálogo completo', tags: '', imagem_url: '', status: 'Ativo', id: 0 })}
-              className="bg-b3-blue-500 hover:bg-b3-blue-600 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl"
             >
               <MessageCircle className="h-5 w-5" />
               <span>Contato Vendedor</span>
@@ -120,7 +132,7 @@ export default function Home() {
                 onClick={() => setSelectedCategory(category.name)}
                 className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
                   selectedCategory === category.name
-                    ? 'bg-b3-blue-500 text-white shadow-lg'
+                    ? 'bg-blue-600 text-white shadow-lg'
                     : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
                 }`}
               >
@@ -136,13 +148,13 @@ export default function Home() {
             <div className="flex rounded-lg border border-gray-200 bg-white">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-l-lg transition-colors ${viewMode === 'grid' ? 'bg-b3-blue-500 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+                className={`p-2 rounded-l-lg transition-colors ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
               >
                 <Grid className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-2 rounded-r-lg transition-colors ${viewMode === 'list' ? 'bg-b3-blue-500 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+                className={`p-2 rounded-r-lg transition-colors ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
               >
                 <List className="h-4 w-4" />
               </button>
@@ -152,13 +164,7 @@ export default function Home() {
 
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {Array.from({ length: 8 }, (_, i) => (
-              <div key={i} className="bg-white rounded-2xl p-6 shadow-sm animate-pulse">
-                <div className="bg-gray-300 h-48 rounded-xl mb-4"></div>
-                <div className="bg-gray-300 h-4 rounded mb-2"></div>
-                <div className="bg-gray-300 h-3 rounded w-2/3"></div>
-              </div>
-            ))}
+            {loadingCards}
           </div>
         ) : (
           <div className={`grid gap-6 ${
@@ -191,7 +197,7 @@ export default function Home() {
                     </button>
                     <button
                       onClick={() => setSelectedProduct(product)}
-                      className="flex-1 bg-b3-blue-500 hover:bg-b3-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center space-x-2"
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center space-x-2"
                     >
                       <Eye className="h-4 w-4" />
                       <span>Ver</span>
@@ -201,14 +207,14 @@ export default function Home() {
 
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-b3-blue-600 transition-colors">
+                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
                       {product.nome}
                     </h3>
                   </div>
-                  <p className="text-sm font-medium text-b3-blue-600 uppercase tracking-wide mb-2">
+                  <p className="text-sm font-medium text-blue-600 uppercase tracking-wide mb-2">
                     {product.categoria}
                   </p>
-                  <p className="text-gray-600 text-sm line-clamp-2">
+                  <p className="text-gray-600 text-sm">
                     {product.descricao}
                   </p>
                 </div>
@@ -249,7 +255,7 @@ export default function Home() {
                   <div className="flex justify-between items-start mb-6">
                     <div>
                       <h2 className="text-2xl font-bold text-gray-900 mb-2">{selectedProduct.nome}</h2>
-                      <p className="text-b3-blue-600 font-medium uppercase tracking-wide">{selectedProduct.categoria}</p>
+                      <p className="text-blue-600 font-medium uppercase tracking-wide">{selectedProduct.categoria}</p>
                     </div>
                     <button
                       onClick={() => setSelectedProduct(null)}
@@ -274,7 +280,7 @@ export default function Home() {
                       <MessageCircle className="h-5 w-5" />
                       <span>Solicitar Orçamento via WhatsApp</span>
                     </button>
-                    <button className="w-full bg-b3-blue-500 hover:bg-b3-blue-600 text-white px-6 py-4 rounded-xl font-medium transition-colors duration-200 flex items-center justify-center space-x-3">
+                    <button className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-xl font-medium transition-colors duration-200 flex items-center justify-center space-x-3">
                       <Phone className="h-5 w-5" />
                       <span>Falar com Consultor</span>
                     </button>
