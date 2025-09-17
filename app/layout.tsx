@@ -1,44 +1,40 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+import './globals.css'
+import type { Metadata } from 'next'
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
-:root {
-  --b3-blue: #2563eb;
-  --b3-blue-dark: #1e40af;
-  --b3-gray: #f8fafc;
+export const metadata: Metadata = {
+  title: 'B3 Ambientes Corporativos | Catálogo Digital',
+  description: 'Catálogo digital de móveis corporativos B3. Encontre cadeiras, mesas, estações de trabalho e mais para seu projeto.',
+  keywords: 'móveis corporativos, B3, cadeiras, mesas, estações trabalho, escritório',
+  authors: [{ name: 'B3 Ambientes Corporativos' }],
+  creator: 'B3 Ambientes Corporativos',
+  publisher: 'B3 Ambientes Corporativos',
+  openGraph: {
+    title: 'B3 Ambientes Corporativos | Catálogo Digital',
+    description: 'Catálogo digital de móveis corporativos B3',
+    url: 'https://catalogob3.vercel.app',
+    siteName: 'B3 Catálogo',
+    locale: 'pt_BR',
+    type: 'website',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  themeColor: '#2563eb',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-  font-family: 'Inter', sans-serif;
-}
-
-body {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  min-height: 100vh;
-}
-
-.glass-effect {
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-}
-
-.card-hover {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.card-hover:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="pt-BR">
+      <head>
+        <meta name="theme-color" content="#2563eb" />
+      </head>
+      <body>{children}</body>
+    </html>
+  )
 }
