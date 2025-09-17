@@ -29,8 +29,16 @@ export default function Home() {
   })
 
   const categories = useMemo(() => {
-    const cats = ['Todos', ...new Set(products.map((p: Product) => p.categoria))]
-    return cats.map(cat => ({
+    const uniqueCategories = products.reduce((acc: string[], product: Product) => {
+      if (!acc.includes(product.categoria)) {
+        acc.push(product.categoria)
+      }
+      return acc
+    }, [])
+    
+    const allCategories = ['Todos', ...uniqueCategories]
+    
+    return allCategories.map(cat => ({
       name: cat,
       count: cat === 'Todos' ? products.length : products.filter((p: Product) => p.categoria === cat).length
     }))
@@ -144,7 +152,7 @@ export default function Home() {
 
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {[...Array(8)].map((_, i) => (
+            {Array.from({ length: 8 }, (_, i) => (
               <div key={i} className="bg-white rounded-2xl p-6 shadow-sm animate-pulse">
                 <div className="bg-gray-300 h-48 rounded-xl mb-4"></div>
                 <div className="bg-gray-300 h-4 rounded mb-2"></div>
