@@ -20,19 +20,22 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<string>('Todos')
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
 
-  // Fix: don't use an untyped default empty array (which can infer never[]).
-  // Instead, keep `data` from SWR and derive a typed products array.
-  const { data, isLoading } = useSWR<Product[]>('/api/products', fetcher)
-  const products: Product[] = data ?? []
+  // Tipagem segura para a resposta da API: pode ser um array direto ou um objeto { products: [...] }
+  type SWRData = Product[] | { products: Product[] } | undefined
+  const { data, isLoading } = useSWR<SWRData>('/api/products', fetcher)
+
+  // Normaliza a resposta em Product[]
+  const products: Product[] = Array.isArray(data) ? data : (data && (data as any).products) ?? []
 
   const handleWhatsApp = (product: Product) => {
+    if (!product) return
     const message = `B3 Móveis - ${product.nome}\nCategoria: ${product.categoria}\n\nSolicitar orçamento!`
     const phoneNumber = '5581999999999'
     const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
     window.open(url, '_blank')
   }
 
-  const filteredProducts = products.filter((product) => {
+  const filteredProducts: Product[] = products.filter((product) => {
     if (!product || !product.nome) return false
     const searchMatch = searchTerm === '' || product.nome.toLowerCase().includes(searchTerm.toLowerCase())
     const categoryMatch = selectedCategory === 'Todos' || product.categoria === selectedCategory
@@ -106,13 +109,20 @@ export default function Home() {
             {filteredProducts.map((product) => (
               <div key={product.id} className="bg-white rounded-lg overflow-hidden shadow group">
                 <div className="relative">
-                  <Image
-                    src={product.imagem_url}
-                    alt={product.nome}
-                    width={400}
-                    height={300}
-                    className="w-full h-48 object-cover"
-                  />
+                  {product.imagem_url ? (
+                    <Image
+                      src={product.imagem_url}
+                      alt={product.nome}
+                      width={400}
+                      height={300}
+                      className="w-full h-48 object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-48 bg-gray-200 flex items-center justify-center text-sm text-gray-500">
+                      Sem imagem
+                    </div>
+                  )}
+
                   <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                     <div className="flex space-x-2">
                       <button
