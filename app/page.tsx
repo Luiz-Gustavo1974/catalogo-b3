@@ -5,16 +5,24 @@ import { Search, MessageCircle, Eye } from 'lucide-react'
 import useSWR from 'swr'
 import Image from 'next/image'
 
-const fetcher = (url) => fetch(url).then((res) => res.json())
+type Product = {
+  id: number
+  nome: string
+  categoria: string
+  descricao: string
+  imagem_url: string
+}
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export default function Home() {
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('Todos')
-  const [selectedProduct, setSelectedProduct] = useState(null)
+  const [searchTerm, setSearchTerm] = useState<string>('')
+  const [selectedCategory, setSelectedCategory] = useState<string>('Todos')
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
 
-  const { data: products = [], isLoading } = useSWR('/api/products', fetcher)
+  const { data: products = [], isLoading } = useSWR<Product[]>('/api/products', fetcher)
 
-  const handleWhatsApp = (product) => {
+  const handleWhatsApp = (product: Product) => {
     const message = `B3 Móveis - ${product.nome}\nCategoria: ${product.categoria}\n\nSolicitar orçamento!`
     const phoneNumber = '5581999999999'
     const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
@@ -56,7 +64,7 @@ export default function Home() {
             </div>
 
             <button
-              onClick={() => handleWhatsApp({ nome: 'Catálogo', categoria: 'Geral' })}
+              onClick={() => handleWhatsApp({ id: 0, nome: 'Catálogo', categoria: 'Geral', descricao: '', imagem_url: '' })}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg"
             >
               Contato
@@ -158,7 +166,7 @@ export default function Home() {
       )}
 
       <button
-        onClick={() => handleWhatsApp({ nome: 'Atendimento', categoria: 'Geral' })}
+        onClick={() => handleWhatsApp({ id: 0, nome: 'Atendimento', categoria: 'Geral', descricao: '', imagem_url: '' })}
         className="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full"
       >
         <MessageCircle className="h-6 w-6" />
