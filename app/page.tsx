@@ -7,21 +7,33 @@ import Image from 'next/image'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
+// Interface para o produto
+interface Product {
+  id: number
+  nome: string
+  categoria: string
+  tags: string
+  imagem_url: string
+  descricao: string
+  status: string
+}
+
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('Todos')
-  const [selectedProduct, setSelectedProduct] = useState<any>(null)
+  // CORREÇÃO: Tipar explicitamente o useState
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
 
   const { data: products = [], isLoading } = useSWR('/api/products', fetcher)
 
-  const handleWhatsApp = (product: any) => {
-    const message = `B3 Móveis - ${product.nome || 'Produto'}\nCategoria: ${product.categoria || 'Geral'}\n\nSolicitar orçamento!`
+  const handleWhatsApp = (product: Product) => {
+    const message = `B3 Móveis - ${product.nome}\nCategoria: ${product.categoria}\n\nSolicitar orçamento!`
     const phoneNumber = '5581999999999'
     const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
     window.open(url, '_blank')
   }
 
-  const filteredProducts = products.filter((product: any) => {
+  const filteredProducts = products.filter((product: Product) => {
     if (!product || !product.nome) return false
     
     const searchMatch = searchTerm === '' || 
@@ -60,7 +72,7 @@ export default function Home() {
             </div>
 
             <button
-              onClick={() => handleWhatsApp({ nome: 'Catálogo', categoria: 'Geral' })}
+              onClick={() => handleWhatsApp({ nome: 'Catálogo', categoria: 'Geral', id: 0, tags: '', imagem_url: '', descricao: 'Catálogo completo', status: 'Ativo' })}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg"
             >
               Contato
@@ -98,12 +110,12 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {filteredProducts.map((product: any) => (
-              <div key={product.id || Math.random()} className="bg-white rounded-lg overflow-hidden shadow group">
+            {filteredProducts.map((product: Product) => (
+              <div key={product.id} className="bg-white rounded-lg overflow-hidden shadow group">
                 <div className="relative">
                   <Image
-                    src={product.imagem_url || '/placeholder.jpg'}
-                    alt={product.nome || 'Produto'}
+                    src={product.imagem_url}
+                    alt={product.nome}
                     width={400}
                     height={300}
                     className="w-full h-48 object-cover"
@@ -149,9 +161,9 @@ export default function Home() {
               >
                 ✕
               </button>
-              <h2 className="text-2xl font-bold mb-2">{selectedProduct?.nome || 'Produto'}</h2>
-              <p className="text-blue-600 mb-4">{selectedProduct?.categoria || 'Categoria'}</p>
-              <p className="text-gray-600 mb-6">{selectedProduct?.descricao || 'Descrição'}</p>
+              <h2 className="text-2xl font-bold mb-2">{selectedProduct.nome}</h2>
+              <p className="text-blue-600 mb-4">{selectedProduct.categoria}</p>
+              <p className="text-gray-600 mb-6">{selectedProduct.descricao}</p>
               <button
                 onClick={() => handleWhatsApp(selectedProduct)}
                 className="w-full bg-green-500 text-white py-3 rounded-lg"
@@ -164,7 +176,7 @@ export default function Home() {
       )}
 
       <button
-        onClick={() => handleWhatsApp({ nome: 'Atendimento', categoria: 'Geral' })}
+        onClick={() => handleWhatsApp({ nome: 'Atendimento', categoria: 'Geral', id: 0, tags: '', imagem_url: '', descricao: 'Atendimento geral', status: 'Ativo' })}
         className="fixed bottom-6 right-6 bg-green-500 text-white p-4 rounded-full"
       >
         <MessageCircle className="h-6 w-6" />
