@@ -127,7 +127,7 @@ export default function Home() {
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleWhatsApp(product)}
-                        className="bg-green-500 text-white px-4 py-2 rounded flex items-center space-x-2"
+                        className="bg-green-500 text-white px-4 py-2 rounded flex itens-center space-x-2"
                       >
                         <MessageCircle className="h-4 w-4" />
                         <span>WhatsApp</span>
